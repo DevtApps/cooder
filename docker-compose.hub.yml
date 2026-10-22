@@ -1,0 +1,181 @@
+# Secure production overlay. Build the image locally from the repository:
+#   docker compose -f docker-compose.hub.yml up -d --build
+#
+# Before running, create a .env file with:
+#   SESSION_SECRET=your-session-secret-at-least-32-characters
+#   JWT_SECRET=your-jwt-secret-at-least-32-characters
+#   ENCRYPTION_KEY=your-independent-encryption-key
+#   AUTH_ALLOWED_EMAILS=admin@example.com
+#   POSTGRES_PASSWORD=your-database-password
+#
+# This pull-based production compose intentionally has no insecure auth
+# defaults. Compose refuses to create the container while any required value
+# is empty.
+
+services:
+  config-guard:
+    build: .
+    image: cooder:local
+    restart: 'no'
+    network_mode: none
+    entrypoint: ['/bin/sh', '/app/scripts/validate-production-env.sh']
+    environment:
+      - 'SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET must be set to at least 32 random characters}'
+      - 'JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set to at least 32 random characters}'
+      - 'AUTH_ALLOWED_EMAILS=${AUTH_ALLOWED_EMAILS:?AUTH_ALLOWED_EMAILS must contain at least one trusted email for the public Hub deployment}'
+      - 'ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set independently so stored provider credentials are encrypted}'
+      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set for the bundled database}'
+
+  # The backend has required Postgres since the SQLite removal. Without this
+  # service the pull-based deployment started, defaulted to host "plum-postgres"
+  # with an empty password, and only failed later as an unhandled rejection
+  # during initDatabase() — a container that looks up but cannot store anything.
+  postgres:
+    image: postgres:17-alpine
+    container_name: plum-postgres-hub
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${PGDATABASE:-plumcode}
+      - POSTGRES_USER=${PGUSER:-plumcode}
+      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set for the bundled database}'
+    volumes:
+      - plum-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${PGUSER:-plumcode} -d ${PGDATABASE:-plumcode}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - claude-network
+
+  plum-code-webui:
+    build: .
+    image: cooder:local
+    container_name: plum-code-webui
+    restart: unless-stopped
+    init: true
+    depends_on:
+      config-guard:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    ports:
+      # Loopback only. This compose is meant to sit behind a reverse proxy;
+      # publishing on every interface exposed the UI directly to the LAN.
+      # Override with WEBUI_BIND=0.0.0.0 if that is genuinely what you want.
+      - '${WEBUI_BIND:-127.0.0.1}:${HUB_WEBUI_PORT:-5174}:3001'
+    shm_size: '${WEBUI_SHM_SIZE:-1gb}'
+    environment:
+      - NODE_ENV=production
+      - TZ=${TZ:-Europe/Zurich}
+      - PGHOST=${PGHOST:-postgres}
+      - PGPORT=${PGPORT:-5432}
+      - PGDATABASE=${PGDATABASE:-plumcode}
+      - PGUSER=${PGUSER:-plumcode}
+      - 'PGPASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set for the bundled database}'
+      - PGPOOL_MAX=${PGPOOL_MAX:-10}
+      # Match the portable compose. A pull-based deployment is the one most
+      # likely to be run by someone who has not read the sandbox docs, so it is
+      # the last place that should default to an unsandboxed, never-ask agent.
+      - CODEX_WEBUI_SANDBOX_MODE=${CODEX_WEBUI_SANDBOX_MODE:-workspace-write}
+      - CODEX_WEBUI_APPROVAL_POLICY=${CODEX_WEBUI_APPROVAL_POLICY:-on-request}
+      - CLI_RUNNER_ACCESS=${CLI_RUNNER_ACCESS:-admin-only}
+      - CLI_RUNNER_ALLOWED_EMAILS=${CLI_RUNNER_ALLOWED_EMAILS:-}
+      - CHROME_BIN=${CHROME_BIN:-/usr/local/bin/plum-chromium}
+      - CHROMIUM_BIN=${CHROMIUM_BIN:-/usr/local/bin/plum-chromium}
+      - CHROMIUM_PATH=${CHROMIUM_PATH:-/usr/local/bin/plum-chromium}
+      - BROWSER=${BROWSER:-/usr/local/bin/plum-chromium}
+      - PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=${PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH:-/usr/local/bin/plum-chromium}
+      - PUPPETEER_EXECUTABLE_PATH=${PUPPETEER_EXECUTABLE_PATH:-/usr/local/bin/plum-chromium}
+      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=${PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD:-1}
+      - PUPPETEER_SKIP_DOWNLOAD=${PUPPETEER_SKIP_DOWNLOAD:-1}
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=${PUPPETEER_SKIP_CHROMIUM_DOWNLOAD:-1}
+      - 'SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET must be set to at least 32 random characters}'
+      - 'JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set to at least 32 random characters}'
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5174}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:5174}
+      - ALLOWED_BASE_PATHS=${ALLOWED_BASE_PATHS:-/workspace}
+      # The Hub compose publishes a host port, so an explicit allowlist is
+      # mandatory. Use the portable compose for a private/proxy-only topology.
+      - 'AUTH_ALLOWED_EMAILS=${AUTH_ALLOWED_EMAILS:?AUTH_ALLOWED_EMAILS must contain at least one trusted email for the public Hub deployment}'
+      - SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-}
+      - 'ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set independently so stored provider credentials are encrypted}'
+      - CONTAINER_NAME=plum-code-webui
+      - PREVIEW_HOSTNAME=${PREVIEW_HOSTNAME:-}
+      # OAuth logins (optional — leave empty to use Basic Auth only)
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GITHUB_CALLBACK_URL=${GITHUB_CALLBACK_URL:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL:-}
+      # Trusted-proxy header auth (optional, e.g. behind Authelia/Authentik)
+      - PROXY_AUTH_ENABLED=${PROXY_AUTH_ENABLED:-false}
+      - PROXY_AUTH_EMAIL_HEADERS=${PROXY_AUTH_EMAIL_HEADERS:-}
+      - PROXY_AUTH_USER_HEADERS=${PROXY_AUTH_USER_HEADERS:-}
+      - PROXY_AUTH_NAME_HEADERS=${PROXY_AUTH_NAME_HEADERS:-}
+      - CLI_PROVIDER_CLAUDE_MODELS=${CLI_PROVIDER_CLAUDE_MODELS:-}
+      - CLI_PROVIDER_CLAUDE_DEFAULT_MODEL=${CLI_PROVIDER_CLAUDE_DEFAULT_MODEL:-sonnet}
+      - CLI_PROVIDER_CODEX_MODELS=${CLI_PROVIDER_CODEX_MODELS:-}
+      - CLI_PROVIDER_CODEX_DEFAULT_MODEL=${CLI_PROVIDER_CODEX_DEFAULT_MODEL:-gpt-5.5}
+      - CLI_PROVIDER_OPENCODE_MODELS=${CLI_PROVIDER_OPENCODE_MODELS:-}
+      - CLI_PROVIDER_OPENCODE_DEFAULT_MODEL=${CLI_PROVIDER_OPENCODE_DEFAULT_MODEL:-z-ai/glm-5.1}
+      - CLI_PROVIDER_OPENCODE_DEFAULT_AGENT=${CLI_PROVIDER_OPENCODE_DEFAULT_AGENT:-build}
+      - CLI_PROVIDER_OPENCODE_STYLE_PROMPT=${CLI_PROVIDER_OPENCODE_STYLE_PROMPT:-}
+      - CLI_PROVIDER_PI_MODELS=${CLI_PROVIDER_PI_MODELS:-}
+      - CLI_PROVIDER_PI_DEFAULT_MODEL=${CLI_PROVIDER_PI_DEFAULT_MODEL:-z-ai/glm-5.1}
+      - OPENCODE_DEBUG_EVENTS=${OPENCODE_DEBUG_EVENTS:-0}
+      - OPENCODE_NO_PROGRESS_TIMEOUT_MS=${OPENCODE_NO_PROGRESS_TIMEOUT_MS:-600000}
+      - OPENCODE_ZAI_VISION_MCP=${OPENCODE_ZAI_VISION_MCP:-auto}
+      - ADMIN_LLM_PROVIDER=${ADMIN_LLM_PROVIDER:-}
+      - CODEX_USAGE_URL=${CODEX_USAGE_URL:-}
+      - CODEX_USER_AGENT=${CODEX_USER_AGENT:-}
+      - COMFYUI_URL=${COMFYUI_URL:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL:-}
+      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN:-}
+      - GODOT_BIN=${GODOT_BIN:-}
+      - GODOT_TIMEOUT_MS=${GODOT_TIMEOUT_MS:-120000}
+      - BLENDER_BIN=${BLENDER_BIN:-blender-headless}
+      - BLENDER_TIMEOUT_MS=${BLENDER_TIMEOUT_MS:-300000}
+      - ORACLE_MCP_DEFAULT_ENGINE=${ORACLE_MCP_DEFAULT_ENGINE:-browser}
+      - ORACLE_BROWSER_MODEL=${ORACLE_BROWSER_MODEL:-gpt-5.5-pro}
+      - ORACLE_BROWSER_MODEL_STRATEGY=${ORACLE_BROWSER_MODEL_STRATEGY:-current}
+      - ORACLE_BROWSER_THINKING_TIME=${ORACLE_BROWSER_THINKING_TIME:-}
+      - ORACLE_MCP_BROWSER_TIMEOUT=${ORACLE_MCP_BROWSER_TIMEOUT:-8m}
+      # CLI auto-update (optional)
+      - CLI_AUTO_UPDATE=${CLI_AUTO_UPDATE:-true}
+      - CLI_AUTO_UPDATE_INTERVAL_HOURS=${CLI_AUTO_UPDATE_INTERVAL_HOURS:-24}
+      - CLI_AUTO_UPDATE_PROVIDERS=${CLI_AUTO_UPDATE_PROVIDERS:-}
+    volumes:
+      # Persist database
+      - claude-data:/app/packages/backend/data
+      # Mount Claude credentials from host
+      - ${HOME}/.claude:/home/node/.claude
+      # Mount Codex and OpenCode credentials from host
+      - ${HOME}/.codex:/home/node/.codex
+      - ${HOME}/.opencode:/home/node/.opencode
+      - ${HOME}/.pi:/home/node/.pi
+      - ${HOME}/.kimi-code:/home/node/.kimi-code
+      - ${HOME}/.vibe:/home/node/.vibe
+      # Persist npm global installs (CLI updates)
+      - ${HOME}/.npm-global:/home/node/.npm-global
+      # Mount your project directories (adjust as needed)
+      - ${HOME}:/workspace
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3001/health/ready']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    networks:
+      - claude-network
+
+volumes:
+  claude-data:
+  plum-postgres-data:
+
+networks:
+  claude-network:
+    driver: bridge

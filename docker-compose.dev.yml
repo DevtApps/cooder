@@ -1,0 +1,33 @@
+# docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+services:
+  claude-code-webui:
+    build:
+      context: .
+      target: development
+    image: cooder:dev
+    # Development can use the external database configured in .env.
+    depends_on: !reset {}
+    env_file:
+      - .env
+    ports: !override
+      - '127.0.0.1:${WEBUI_PORT:-4545}:5173'
+    environment:
+      NODE_ENV: development
+      PORT: '3001'
+      BACKEND_PORT: '3001'
+      VITE_PORT: '5173'
+      VITE_HOST: '0.0.0.0'
+      PGPASSWORD: ${PGPASSWORD:-${POSTGRES_PASSWORD:?Set PGPASSWORD or POSTGRES_PASSWORD in .env}}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1:3001/health/ready >/dev/null && wget -qO- http://127.0.0.1:5173/ >/dev/null
+    volumes:
+      - ./packages/frontend/src:/app/packages/frontend/src:ro
+      - ./packages/frontend/public:/app/packages/frontend/public:ro
+      - ./packages/frontend/index.html:/app/packages/frontend/index.html:ro
+      - ./packages/frontend/vite.config.ts:/app/packages/frontend/vite.config.ts:ro
+      - ./packages/frontend/tailwind.config.js:/app/packages/frontend/tailwind.config.js:ro
+      - ./packages/backend/src:/app/packages/backend/src:ro
+      - ./packages/shared/src:/app/packages/shared/src:ro
+      - ./scripts:/app/scripts:ro

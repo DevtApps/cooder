@@ -1,0 +1,26 @@
+{
+  "name": "@plum-code-webui/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Desktop client for Plum Code WebUI",
+  "main": "dist/main/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev --outDir dist",
+    "build": "electron-vite build --outDir dist",
+    "preview": "electron-vite preview",
+    "package": "electron-builder",
+    "package:linux": "electron-builder --linux AppImage rpm",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "electron-store": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "electron": "^43.0.0",
+    "electron-builder": "^26.0.0",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.6.0"
+  }
+}

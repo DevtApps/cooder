@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    AppWidget provider metadata for SessionWidget.
+
+    Grid sizes:
+      minWidth  / minHeight  = minimum cells × (cell_size + spacing) - spacing
+      For a 2×1 minimum: 2 × 74dp - 2dp = 146dp wide, 74dp - 2dp = 72dp tall
+      For a 4×2 initial: 4 × 74dp - 2dp = 294dp wide, 2 × 74dp - 2dp = 146dp tall
+
+    updatePeriodMillis: 900000 = 15 minutes (system minimum is 30 min on API 26+;
+    set to 900000 and supplement with WorkManager for more frequent updates).
+
+    resizeMode: horizontal|vertical — user can resize to any supported grid size.
+    widgetCategory: home_screen — show only on home screen (not on lock screen).
+-->
+<appwidget-provider
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="146dp"
+    android:minResizeHeight="72dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:maxResizeWidth="500dp"
+    android:maxResizeHeight="500dp"
+    android:updatePeriodMillis="1800000"
+    android:initialLayout="@layout/widget_list"
+    android:configure="com.claudewebui.app.widget.WidgetConfigActivity"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen"
+    android:description="@string/widget_description"
+    android:previewLayout="@layout/widget_list"
+    android:previewImage="@mipmap/ic_launcher" />

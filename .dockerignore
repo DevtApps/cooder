@@ -1,0 +1,36 @@
+node_modules
+**/node_modules
+.pnpm-store
+**/dist
+**/*.tsbuildinfo
+.git
+.logs
+.pids
+data
+# The portable compose default puts the Postgres data directory here. It is
+# created by the database container as uid 70 with mode 0700, so leaving it in
+# the build context fails the build outright: `can't stat '/webui/postgres'`.
+postgres
+/config
+/workspace
+/html previews
+/scripts/__pycache__
+/*.list*
+/tmp-*.png
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+.tmp
+packages/android
+test-*.mjs
+ANDROID_CLIENT_SPEC.md
+AGENTS.md
+*.spec.md
+.claude
+.claude-webui-attachments
+.claude-webui-images
+.screenshots
+reviews
+logos

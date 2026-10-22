@@ -1,0 +1,36 @@
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuthStore } from '@/stores/authStore';
+
+export function AuthCallbackScreen() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { setToken } = useAuthStore();
+
+  useEffect(() => {
+    const token = searchParams.get('token');
+    const error = searchParams.get('error');
+
+    if (error) {
+      navigate(`/connect?error=${error}`);
+      return;
+    }
+
+    if (token) {
+      setToken(token).then(() => {
+        const returnTo = searchParams.get('returnTo');
+        const safeReturnTo =
+          returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/';
+        navigate(safeReturnTo);
+      });
+    } else {
+      navigate('/connect');
+    }
+  }, [searchParams, setToken, navigate]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    </div>
+  );
+}

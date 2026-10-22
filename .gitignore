@@ -1,0 +1,139 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+.screenshots
+
+workspace
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+/data/
+packages/backend/data/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.tgz
+.cache/
+.parcel-cache/
+.eslintcache
+*.tsbuildinfo
+tmp/
+temp/
+.tmp/
+.pids/
+*.pid
+
+# Application logs
+.logs/
+
+# Generated images
+.claude-webui-images/
+
+# Local CLI config
+config/
+
+# Claude Code agent data
+.claude/
+
+# Attachments
+.claude-webui-attachments/
+
+# Rebuild / deploy status files (runtime artifacts)
+LAST_REBUILD.md
+LAST_DEPLOY.md
+REBUILD_ROBOT_REPORT.md
+ROOT_OWNED_FIXES.md
+
+# Backup files
+.tmp-backup-*/
+*.bak
+*.bak-*
+*.bak.*
+
+# One-off debug/audit artifacts (screenshots, CDP probes, audit dumps)
+.artifacts/
+tmp-*.png
+.tmp-*.mjs
+web-audit-*/
+android-verify/
+html previews/
+plum-code-*.list0
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Local UI mockups / scratch
+html templates/
+
+# Logo assets — only the top-level host bind-mount dir is local-only.
+# Frontend bundled logos at packages/frontend/public/logos/ DO ship in the build.
+/logos/
+
+# Credentials and secrets
+*.key
+*.pem
+*.p12
+credentials.json
+.credentials.json
+
+# Lock files (using pnpm)
+package-lock.json
+yarn.lock
+
+# Compose overrides — site-specific (Traefik labels, absolute paths, external networks)
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# Android build artifacts
+packages/android/.gradle/
+packages/android/.kotlin/
+packages/android/build/
+packages/android/app/build/
+packages/android/baselineprofile/build/
+packages/android/local.properties
+packages/android/.cxx/
+packages/android/captures/
+packages/android/*.apk
+packages/android/*.aab
+packages/android/test_*.png
+packages/android/ui_dump*.xml
+
+# Postgres data directory (bind-mounted into the plum-postgres container)
+/postgres/
+.probe/

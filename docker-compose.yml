@@ -1,0 +1,175 @@
+# Portable docker-compose for self-hosters. Defaults expect a vanilla Docker
+# host with the repo checked out into the working dir. Site-specific bits
+# (Traefik labels, absolute Unraid paths, external networks) belong in
+# docker-compose.override.yml — see docker-compose.override.yml.example.
+#
+# Quick start:
+#   1. cp .env.example .env && edit .env (set SESSION_SECRET, JWT_SECRET, AUTH_ALLOWED_EMAILS)
+#   2. docker compose up -d --build
+#   3. open http://localhost:${WEBUI_PORT:-4545}
+
+services:
+  claude-code-webui:
+    build: .
+    image: cooder:latest
+    container_name: claude-code-webui
+    restart: unless-stopped
+    init: true
+    ports:
+      - '127.0.0.1:${WEBUI_PORT:-4545}:3001'
+    shm_size: '${WEBUI_SHM_SIZE:-1gb}'
+    extra_hosts:
+      # Lets the bundled MCP servers reach host-side services (e.g. android-app-creator on the host bridge)
+      - 'host.docker.internal:host-gateway'
+    environment:
+      - NODE_ENV=production
+      - TZ=${TZ:-Europe/Zurich}
+      # Postgres. The host must resolve on the compose network; the password has
+      # no default on purpose, so a misconfigured deployment fails at startup
+      # rather than silently reaching a database nobody meant to use.
+      - PGHOST=${PGHOST:-plum-postgres}
+      - PGPORT=${PGPORT:-5432}
+      - PGDATABASE=${PGDATABASE:-plumcode}
+      - PGUSER=${PGUSER:-plumcode}
+      - PGPASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      - PGPOOL_MAX=${PGPOOL_MAX:-10}
+      - CODEX_WEBUI_SANDBOX_MODE=${CODEX_WEBUI_SANDBOX_MODE:-workspace-write}
+      - CODEX_WEBUI_APPROVAL_POLICY=${CODEX_WEBUI_APPROVAL_POLICY:-on-request}
+      # Shared Unix/provider homes are not a multi-tenant security boundary.
+      # Keep execution admin-only unless specific trusted accounts are listed.
+      - CLI_RUNNER_ACCESS=${CLI_RUNNER_ACCESS:-admin-only}
+      - CLI_RUNNER_ALLOWED_EMAILS=${CLI_RUNNER_ALLOWED_EMAILS:-}
+      - CHROME_BIN=${CHROME_BIN:-/usr/local/bin/plum-chromium}
+      - CHROMIUM_BIN=${CHROMIUM_BIN:-/usr/local/bin/plum-chromium}
+      - CHROMIUM_PATH=${CHROMIUM_PATH:-/usr/local/bin/plum-chromium}
+      - BROWSER=${BROWSER:-/usr/local/bin/plum-chromium}
+      - PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=${PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH:-/usr/local/bin/plum-chromium}
+      - PUPPETEER_EXECUTABLE_PATH=${PUPPETEER_EXECUTABLE_PATH:-/usr/local/bin/plum-chromium}
+      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=${PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD:-1}
+      - PUPPETEER_SKIP_DOWNLOAD=${PUPPETEER_SKIP_DOWNLOAD:-1}
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=${PUPPETEER_SKIP_CHROMIUM_DOWNLOAD:-1}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:4545}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:4545}
+      - ALLOWED_BASE_PATHS=${ALLOWED_BASE_PATHS:-/workspace,/mnt/cache/AI/plum-code}
+      - CONTAINER_NAME=claude-code-webui
+      - PREVIEW_HOSTNAME=${PREVIEW_HOSTNAME:-}
+      - 'SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET must be set in .env — run scripts/install.sh or generate with openssl rand -base64 48}'
+      - 'JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env — run scripts/install.sh or generate with openssl rand -base64 48}'
+      # Email allowlist — REQUIRED for any deployment exposed to the public internet.
+      # Empty = no allowlist (only safe behind a private network or SSO proxy).
+      - AUTH_ALLOWED_EMAILS=${AUTH_ALLOWED_EMAILS:-}
+      # Optional reverse-proxy SSO (Authelia / ForwardAuth). Only enable when
+      # this service is reachable exclusively through a trusted proxy.
+      - PROXY_AUTH_ENABLED=${PROXY_AUTH_ENABLED:-false}
+      - PROXY_AUTH_TRUSTED_IPS=${PROXY_AUTH_TRUSTED_IPS:-}
+      - PROXY_AUTH_EMAIL_HEADERS=${PROXY_AUTH_EMAIL_HEADERS:-}
+      - PROXY_AUTH_USER_HEADERS=${PROXY_AUTH_USER_HEADERS:-}
+      - PROXY_AUTH_NAME_HEADERS=${PROXY_AUTH_NAME_HEADERS:-}
+      - SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-}
+      # No SESSION_SECRET fallback: rotating SESSION_SECRET is a routine way to
+      # invalidate sessions, and with the old fallback that silently made every
+      # stored provider credential undecryptable. Upgrading an install that
+      # relied on the fallback? Set ENCRYPTION_KEY to your current
+      # SESSION_SECRET value once, then rotate the two independently.
+      - 'ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set in .env. New install: openssl rand -base64 48. Existing install that relied on the old fallback: use your current SESSION_SECRET value.}'
+      # Optional CLI provider model overrides
+      - CLI_PROVIDER_CLAUDE_MODELS=${CLI_PROVIDER_CLAUDE_MODELS:-}
+      - CLI_PROVIDER_CLAUDE_DEFAULT_MODEL=${CLI_PROVIDER_CLAUDE_DEFAULT_MODEL:-sonnet}
+      - CLI_PROVIDER_CODEX_MODELS=${CLI_PROVIDER_CODEX_MODELS:-}
+      - CLI_PROVIDER_CODEX_DEFAULT_MODEL=${CLI_PROVIDER_CODEX_DEFAULT_MODEL:-gpt-5.5}
+      - CLI_PROVIDER_OPENCODE_MODELS=${CLI_PROVIDER_OPENCODE_MODELS:-}
+      - CLI_PROVIDER_OPENCODE_DEFAULT_MODEL=${CLI_PROVIDER_OPENCODE_DEFAULT_MODEL:-z-ai/glm-5.1}
+      - CLI_PROVIDER_OPENCODE_DEFAULT_AGENT=${CLI_PROVIDER_OPENCODE_DEFAULT_AGENT:-build}
+      - CLI_PROVIDER_OPENCODE_STYLE_PROMPT=${CLI_PROVIDER_OPENCODE_STYLE_PROMPT:-}
+      - CLI_PROVIDER_PI_MODELS=${CLI_PROVIDER_PI_MODELS:-}
+      - CLI_PROVIDER_PI_DEFAULT_MODEL=${CLI_PROVIDER_PI_DEFAULT_MODEL:-z-ai/glm-5.1}
+      - OPENCODE_NO_PROGRESS_TIMEOUT_MS=${OPENCODE_NO_PROGRESS_TIMEOUT_MS:-600000}
+      - OPENCODE_ZAI_VISION_MCP=${OPENCODE_ZAI_VISION_MCP:-auto}
+      - CLI_AUTO_UPDATE=${CLI_AUTO_UPDATE:-true}
+      - CLI_AUTO_UPDATE_PROVIDERS=${CLI_AUTO_UPDATE_PROVIDERS:-codex}
+      - CLI_AUTO_UPDATE_INTERVAL_HOURS=${CLI_AUTO_UPDATE_INTERVAL_HOURS:-24}
+      - ADMIN_LLM_PROVIDER=${ADMIN_LLM_PROVIDER:-}
+      - OPENCODE_DEBUG_EVENTS=${OPENCODE_DEBUG_EVENTS:-0}
+      - CODEX_USAGE_URL=${CODEX_USAGE_URL:-}
+      - CODEX_USER_AGENT=${CODEX_USER_AGENT:-}
+      - COMFYUI_URL=${COMFYUI_URL:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL:-}
+      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN:-}
+      - GODOT_BIN=${GODOT_BIN:-}
+      - GODOT_TIMEOUT_MS=${GODOT_TIMEOUT_MS:-120000}
+      - BLENDER_BIN=${BLENDER_BIN:-blender-headless}
+      - BLENDER_TIMEOUT_MS=${BLENDER_TIMEOUT_MS:-300000}
+      # Oracle MCP defaults. Keep browser automation conservative; callers can
+      # explicitly request model selection/thinking time when needed.
+      - ORACLE_MCP_DEFAULT_ENGINE=${ORACLE_MCP_DEFAULT_ENGINE:-browser}
+      - ORACLE_BROWSER_MODEL=${ORACLE_BROWSER_MODEL:-gpt-5.5-pro}
+      - ORACLE_BROWSER_MODEL_STRATEGY=${ORACLE_BROWSER_MODEL_STRATEGY:-current}
+      - ORACLE_BROWSER_THINKING_TIME=${ORACLE_BROWSER_THINKING_TIME:-}
+      - ORACLE_MCP_BROWSER_TIMEOUT=${ORACLE_MCP_BROWSER_TIMEOUT:-8m}
+      # Optional OAuth providers — leave empty to disable
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GITHUB_CALLBACK_URL=${GITHUB_CALLBACK_URL:-http://localhost:${WEBUI_PORT:-4545}/api/auth/github/callback}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL:-http://localhost:${WEBUI_PORT:-4545}/api/auth/google/callback}
+    volumes:
+      # Generated images, attachments, backups. The rows live in Postgres.
+      - ${DATA_DIR:-./data}:/app/packages/backend/data
+      # Per-CLI auth + state — survive container rebuilds
+      - ${CONFIG_DIR:-./config}/claude:/home/node/.claude
+      - ${CONFIG_DIR:-./config}/codex:/home/node/.codex
+      - ${CONFIG_DIR:-./config}/opencode:/home/node/.opencode
+      - ${CONFIG_DIR:-./config}/pi:/home/node/.pi
+      - ${CONFIG_DIR:-./config}/kimi:/home/node/.kimi-code
+      - ${CONFIG_DIR:-./config}/vibe:/home/node/.vibe
+      - ${CONFIG_DIR:-./config}/npm-global:/home/node/.npm-global
+      # Workspace path the running CLI can read/write. Defaults to ./workspace; mount your project here.
+      - ${WORKSPACE_DIR:-./workspace}:/workspace
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3001/health/ready']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - default
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: plum-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${PGDATABASE:-plumcode}
+      - POSTGRES_USER=${PGUSER:-plumcode}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      # Deterministic collation. The default follows the image's locale, and
+      # changing it under a populated database silently corrupts text indexes:
+      # existing entries keep the old ordering while new ones use the new one,
+      # so an index scan starts missing rows a sequential scan still finds.
+      - POSTGRES_INITDB_ARGS=--locale=C --encoding=UTF8
+    volumes:
+      # A named volume, deliberately not a path under the project: the build
+      # context is the project directory, and Docker's legacy builder stats
+      # every entry in it before .dockerignore is applied. A Postgres data
+      # directory is mode 0700, so a bind mount here fails every build with
+      # `can't stat`. Set POSTGRES_DIR to a path outside the project if you
+      # want a bind mount.
+      - ${POSTGRES_DIR:-plum-postgres-data}:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${PGUSER:-plumcode} -d ${PGDATABASE:-plumcode}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+
+volumes:
+  plum-postgres-data:
+
+networks:
+  default:

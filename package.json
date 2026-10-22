@@ -1,0 +1,80 @@
+{
+  "name": "cooder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first coding workspace for Codex and other agent harnesses",
+  "type": "module",
+  "author": "Cooder",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devtapps/cooder.git"
+  },
+  "homepage": "https://github.com/devtapps/cooder#readme",
+  "bugs": {
+    "url": "https://github.com/devtapps/cooder/issues"
+  },
+  "bin": {
+    "cooder": "./scripts/cooder.mjs"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel -r --filter '!@plum-code-webui/desktop' run dev",
+    "cooder": "node scripts/cooder.mjs",
+    "cooder:install": "bash scripts/local/install.sh",
+    "cooder:web": "bash scripts/local/run-cooder.sh web",
+    "dev:desktop": "pnpm --filter @plum-code-webui/desktop run dev",
+    "build": "pnpm -r run build",
+    "start": "node packages/backend/dist/index.js",
+    "test": "node scripts/run-regression-tests.mjs",
+    "screenshots": "node scripts/ui-screenshots.mjs",
+    "lint": "eslint \"packages/**/*.{ts,tsx}\"",
+    "audit:prod": "node scripts/audit-production.mjs",
+    "format": "prettier --write \"packages/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"packages/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "typecheck": "pnpm -r run typecheck",
+    "test:providers": "pnpm --filter @plum-code-webui/backend run test:providers",
+    "clean": "pnpm -r run clean && rm -rf node_modules"
+  },
+  "keywords": [
+    "codex",
+    "opencode",
+    "pi-agent",
+    "claude-code",
+    "webui",
+    "ai",
+    "coding-assistant"
+  ],
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "pnpm": {
+    "overrides": {
+      "body-parser@1.20.4": "1.20.6",
+      "brace-expansion@1": "^1.1.18",
+      "brace-expansion@2": "^2.1.4",
+      "diff@5.2.0": "5.2.2",
+      "engine.io@6.6.5": "6.6.7",
+      "exceljs>tmp": "0.2.7",
+      "exceljs>uuid": "11.1.1",
+      "fast-uri": "^3.1.6",
+      "path-to-regexp@0.1.12": "0.1.13",
+      "qs@6.14.1": "6.15.2",
+      "socket.io-parser": "^4.2.7",
+      "ws@8.18.3": "8.21.0",
+      "yaml@1.10.2": "1.10.3"
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "playwright-core": "^1.64.1",
+    "pnpm": "9.15.0",
+    "prettier": "^3.8.3",
+    "typescript-eslint": "^8.59.3"
+  }
+}

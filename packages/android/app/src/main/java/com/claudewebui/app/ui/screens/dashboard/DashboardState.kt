@@ -1,0 +1,106 @@
+package com.claudewebui.app.ui.screens.dashboard
+
+import com.claudewebui.app.data.model.Category
+import com.claudewebui.app.data.model.CLIProvider
+import com.claudewebui.app.data.model.Session
+import com.claudewebui.app.data.model.MessageSearchResult
+import com.claudewebui.app.data.model.PendingPermissionItem
+import com.claudewebui.app.data.repository.SessionLaunchSetup
+import com.claudewebui.app.data.repository.SessionPreset
+import com.claudewebui.app.data.repository.DEFAULT_SESSION_PRESETS
+
+enum class DashboardSearchScope { SESSIONS, MESSAGES }
+
+/**
+ * A project (session working directory) for the dashboard's project chips.
+ * Same idea as the web navigation's project list; on the phone it filters the
+ * session list instead of owning the sidebar.
+ */
+data class DashboardProject(
+    val path: String,
+    /** Directory label for the chip: PlumCode, ola… */
+    val label: String,
+    val sessionCount: Int,
+)
+
+// ── UI State ──────────────────────────────────────────────────────────────────
+
+data class DashboardUiState(
+    /** Saved session templates offered in the new-session sheet. */
+    val sessionTemplates: List<com.claudewebui.app.data.model.SessionTemplate> = emptyList(),
+    /** Viewing the archive instead of the active sessions. */
+    val showArchived: Boolean = false,
+    /** Ids selected for a bulk action; empty means selection mode is off. */
+    val selectedSessionIds: Set<String> = emptySet(),
+    /** Durable cross-session notification feed. */
+    val notifications: List<com.claudewebui.app.data.model.AppNotification> = emptyList(),
+    val unreadNotifications: Int = 0,
+    /** Checkouts on disk that have no session yet — the WebUI's Discovered Projects. */
+    val discoveredProjects: List<com.claudewebui.app.data.model.DiscoveredProject> = emptyList(),
+    val showDiscoveredProjects: Boolean = false,
+    val sessions: List<Session> = emptyList(),
+    val filteredSessions: List<Session> = emptyList(),
+    val categories: List<Category> = emptyList(),
+    val availableProviders: List<CLIProvider> = CLIProvider.active,
+    val selectedCategoryId: String? = null,   // null = "All"
+    val searchQuery: String = "",
+    /**
+     * The project (= working directory) the list is narrowed to, mirroring the
+     * web frontend's project-first navigation. null = "All".
+     */
+    val selectedProjectPath: String? = null,
+    /** Projects derived from the sessions' working directories, popular first. */
+    val projects: List<DashboardProject> = emptyList(),
+    val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
+    /** Wall-clock millis of the last successful session load; null until one lands. */
+    val lastRefreshedAt: Long? = null,
+    val error: String? = null,
+    val isOffline: Boolean = false,
+    val isSearchExpanded: Boolean = false,
+    val searchScope: DashboardSearchScope = DashboardSearchScope.SESSIONS,
+    val messageSearchResults: List<MessageSearchResult> = emptyList(),
+    val isSearchingMessages: Boolean = false,
+    val messageSearchError: String? = null,
+    val isCreatingSession: Boolean = false,
+    val creationError: String? = null,
+    val sessionPresets: List<SessionPreset> = DEFAULT_SESSION_PRESETS,
+    val lastSessionSetup: SessionLaunchSetup = SessionLaunchSetup(),
+    /** Every approval waiting on this user, across all sessions. */
+    val pendingApprovals: List<PendingPermissionItem> = emptyList(),
+    /**
+     * Ids the server flags as blocked on a human or errored. Comes from the
+     * gateway overview rather than being derived here, so the phone and the
+     * WebUI agree on what "needs attention" means.
+     */
+    val needsAttention: Set<String> = emptySet(),
+    /** The approvals sheet is open. */
+    val showApprovals: Boolean = false,
+    /** Request ids currently being answered, so their buttons can disable. */
+    val respondingApprovals: Set<String> = emptySet(),
+) {
+    /** True when initial load is in progress (no data yet). */
+    val isInitialLoading: Boolean
+        get() = isLoading && sessions.isEmpty()
+
+    /** Sessions the supervisor should look at first. */
+    val attentionCount: Int
+        get() = needsAttention.size
+}
+
+// ── One-shot Events ───────────────────────────────────────────────────────────
+
+sealed class DashboardEvent {
+    data class NavigateToChat(val sessionId: String) : DashboardEvent()
+    data class NavigateToMessage(
+        val sessionId: String,
+        val messageId: String,
+        val chatId: String? = null,
+    ) : DashboardEvent()
+    data class ShowError(val message: String) : DashboardEvent()
+    data class SessionCreated(val session: Session) : DashboardEvent()
+    data class SessionDeleted(val sessionId: String) : DashboardEvent()
+    object ShowNewSessionDialog : DashboardEvent()
+    object ShowCategoryManager : DashboardEvent()
+    object NavigateToSettings : DashboardEvent()
+}
