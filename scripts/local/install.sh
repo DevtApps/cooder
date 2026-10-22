@@ -136,6 +136,8 @@ if [ -z "$(get_env SESSION_SECRET)" ]; then set_env SESSION_SECRET "$(openssl ra
 if [ -z "$(get_env JWT_SECRET)" ]; then set_env JWT_SECRET "$(openssl rand -hex 32)"; fi
 if [ -z "$(get_env ENCRYPTION_KEY)" ]; then set_env ENCRYPTION_KEY "$(openssl rand -hex 32)"; fi
 if [ -z "$(get_env WEBUI_HOOK_SECRET)" ]; then set_env WEBUI_HOOK_SECRET "$(openssl rand -hex 32)"; fi
+export SESSION_SECRET="$(get_env SESSION_SECRET)"
+export JWT_SECRET="$(get_env JWT_SECRET)"
 
 [ -n "$(get_env PORT)" ] || set_env PORT 3001
 if [ -z "$(get_env BACKEND_URL)" ]; then set_env BACKEND_URL "http://127.0.0.1:$(get_env PORT)"; fi
