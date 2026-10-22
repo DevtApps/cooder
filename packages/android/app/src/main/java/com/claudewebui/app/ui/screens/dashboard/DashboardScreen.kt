@@ -116,6 +116,7 @@ import com.claudewebui.app.ui.components.common.WindowWidth
 import com.claudewebui.app.ui.components.common.providerColor
 import com.claudewebui.app.ui.components.common.providerLabel
 import com.claudewebui.app.ui.components.common.sessionModel
+import com.claudewebui.app.ui.theme.SerifTypography
 import com.claudewebui.app.ui.components.dashboard.CategoryManager
 import com.claudewebui.app.ui.components.dashboard.IdlePrefs
 import com.claudewebui.app.ui.components.dashboard.SessionState
@@ -804,22 +805,70 @@ internal fun CompactSessionsHeader(
     onApprovals: () -> Unit = {},
 ) {
     val resources = androidx.compose.ui.platform.LocalContext.current.resources
-    Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(resources.getString(R.string.dashboard_sessions_e11e3), color = PlumText,
-                style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-            NotificationBell(unreadNotifications, onNotifications)
-            if (phoneLayout) PlumIconButton(Icons.Default.Add, resources.getString(R.string.dashboard_new_session_5c881), onNewSession)
-            else PlumIconButton(Icons.Outlined.Settings, resources.getString(R.string.dashboard_settings_c7f73), onSettings)
-        }
-        val summary = buildList {
-            add(resources.getString(if (online) R.string.dashboard_online_c3e83 else R.string.dashboard_offline_e01fa))
-            if (runningCount > 0) add(resources.getString(R.string.dashboard_working_count, runningCount))
-            if (approvals > 0) add(resources.getString(R.string.dashboard_attention_count, approvals))
-        }.joinToString(" · ")
-        Text(summary, color = PlumMuted, style = MaterialTheme.typography.bodyMedium)
-        if (approvals > 0) TextButton(onClick = onApprovals) {
-            Text(resources.getString(R.string.dashboard_1_s_approvals_tap_to_answer_fe3f9, approvals))
+    val palette = LocalPlumPalette.current
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = palette.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, palette.border),
+    ) {
+        Column(
+            Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        resources.getString(R.string.dashboard_start_prompt),
+                        style = SerifTypography.headlineMedium.copy(fontSize = 27.sp, lineHeight = 32.sp),
+                        color = PlumText,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        resources.getString(R.string.dashboard_start_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PlumMuted,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    NotificationBell(unreadNotifications, onNotifications)
+                    PlumIconButton(Icons.Outlined.Settings, resources.getString(R.string.dashboard_settings_c7f73), onSettings)
+                }
+            }
+
+            Button(
+                onClick = onNewSession,
+                modifier = Modifier.heightIn(min = 48.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = palette.accent,
+                    contentColor = Color.White,
+                ),
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(resources.getString(R.string.dashboard_new_session_5c881), fontWeight = FontWeight.SemiBold)
+            }
+
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(Modifier.size(7.dp).background(if (online) PlumGreen else PlumRed, CircleShape))
+                val summary = buildList {
+                    add(resources.getString(if (online) R.string.dashboard_online_c3e83 else R.string.dashboard_offline_e01fa))
+                    if (runningCount > 0) add(resources.getString(R.string.dashboard_working_count, runningCount))
+                }.joinToString(" · ")
+                Text(summary, color = PlumMuted, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                if (approvals > 0) {
+                    TextButton(onClick = onApprovals, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
+                        Text(resources.getString(R.string.dashboard_1_s_approvals_8eef1, approvals), color = PlumAccent)
+                    }
+                }
+            }
         }
     }
 }

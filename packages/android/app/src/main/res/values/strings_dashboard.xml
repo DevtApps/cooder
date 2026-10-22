@@ -80,6 +80,8 @@
     <string name="dashboard_search_messages_abea6">Search messages</string>
     <string name="dashboard_search_sessions_646db">Search sessions</string>
     <string name="dashboard_search_sessions_folders_or_providers_a7ef1">Search sessions, folders or providers</string>
+    <string name="dashboard_start_prompt">What should we work on?</string>
+    <string name="dashboard_start_hint">Start a new task or continue with a recent project.</string>
     <string name="dashboard_select_a_session_2f0b7">Select a session</string>
     <string name="dashboard_session_actions_b086c">Session actions</string>
     <string name="dashboard_session_f7f19">Session</string>

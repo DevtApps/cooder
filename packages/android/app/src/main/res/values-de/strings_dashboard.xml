@@ -80,6 +80,8 @@
     <string name="dashboard_search_messages_abea6">Nachrichten suchen</string>
     <string name="dashboard_search_sessions_646db">Sitzungen suchen</string>
     <string name="dashboard_search_sessions_folders_or_providers_a7ef1">Sitzungen, Ordner oder Anbieter suchen</string>
+    <string name="dashboard_start_prompt">Woran sollen wir arbeiten?</string>
+    <string name="dashboard_start_hint">Neue Aufgabe starten oder mit einem aktuellen Projekt weitermachen.</string>
     <string name="dashboard_select_a_session_2f0b7">Sitzung auswählen</string>
     <string name="dashboard_session_actions_b086c">Sitzungsaktionen</string>
     <string name="dashboard_session_f7f19">Sitzung</string>
