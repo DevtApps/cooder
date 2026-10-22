@@ -22,6 +22,7 @@
     "cooder": "node scripts/cooder.mjs",
     "cooder:install": "bash scripts/local/install.sh",
     "cooder:web": "bash scripts/local/run-cooder.sh web",
+    "package:release": "bash scripts/package-release.sh",
     "dev:desktop": "pnpm --filter @plum-code-webui/desktop run dev",
     "build": "pnpm -r run build",
     "start": "node packages/backend/dist/index.js",

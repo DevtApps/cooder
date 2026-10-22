@@ -7,7 +7,7 @@ SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 REPO_ROOT="$SCRIPT_ROOT"
 REAL_HOME="${HOME}"
 COODER_HOME="${COODER_HOME:-$REAL_HOME/.local/share/cooder}"
-SOURCE_ROOT="$SCRIPT_ROOT"
+SOURCE_ROOT="${COODER_SOURCE_ROOT:-$SCRIPT_ROOT}"
 SKIP_CLIS=0
 DRY_RUN=0
 
@@ -207,6 +207,9 @@ fi
 
 mkdir -p "$COODER_HOME/bin"
 cp "$SOURCE_ROOT/scripts/cooder.mjs" "$COODER_HOME/bin/cooder.mjs"
+mkdir -p "$COODER_HOME/scripts/local"
+cp "$SOURCE_ROOT/scripts/local/install.sh" "$COODER_HOME/scripts/local/install.sh"
+cp "$SOURCE_ROOT/scripts/local/install-remote.sh" "$COODER_HOME/scripts/local/install-remote.sh"
 cat > "$COODER_HOME/bin/cooder" <<EOF
 #!/usr/bin/env bash
 export COODER_HOME="$COODER_HOME"

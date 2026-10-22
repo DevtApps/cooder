@@ -155,11 +155,19 @@ async function start() {
 
 switch (command) {
   case 'install':
-    if (!fs.existsSync(path.join(scriptRoot, 'scripts/local/install.sh'))) {
-      console.error('Install from a compiled Cooder checkout with: pnpm cooder:install');
-      process.exit(1);
+    {
+      const isInstalled = path.resolve(scriptRoot) === path.resolve(cooderHome);
+      const installer = path.join(
+        scriptRoot,
+        'scripts/local',
+        isInstalled ? 'install-remote.sh' : 'install.sh'
+      );
+      if (!fs.existsSync(installer)) {
+        console.error('Install from a compiled Cooder checkout with: pnpm cooder:install');
+        process.exit(1);
+      }
+      run('bash', [installer, ...process.argv.slice(3)]);
     }
-    run('bash', [path.join(scriptRoot, 'scripts/local/install.sh'), ...process.argv.slice(3)]);
     break;
   case 'start':
     await start();

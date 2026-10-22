@@ -1,0 +1,111 @@
+name: Build and Release Cooder
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+
+concurrency:
+  group: cooder-release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 9.15.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.13.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Require release tags to point to main
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo "Release tags must point to a commit on main." >&2
+            exit 1
+          }
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build shared, backend and frontend
+        run: |
+          pnpm --filter @plum-code-webui/shared run build
+          pnpm --filter @plum-code-webui/backend run build
+          pnpm --filter @plum-code-webui/frontend run build
+
+      - name: Package local release
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: bash scripts/package-release.sh "$RUNNER_TEMP/cooder-release" "$GITHUB_REF_NAME"
+
+      - name: Upload release bundle
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cooder-release
+          path: |
+            ${{ runner.temp }}/cooder-release/cooder-local.tar.gz
+            ${{ runner.temp }}/cooder-release/cooder-local.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release bundle
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: cooder-release
+          path: release
+
+      - name: Publish GitHub Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" \
+              release/cooder-local.tar.gz \
+              release/cooder-local.tar.gz.sha256 \
+              --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              release/cooder-local.tar.gz \
+              release/cooder-local.tar.gz.sha256 \
+              --verify-tag \
+              --title "Cooder $GITHUB_REF_NAME" \
+              --generate-notes
+          fi
