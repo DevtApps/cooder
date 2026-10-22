@@ -73,18 +73,21 @@ The local installer packages the compiled application, downloads an isolated
 Node.js runtime and keeps Cooder data below `COODER_HOME` (default:
 `~/.local/share/cooder`).
 
-For a published release, download and review the installer, then run it:
+Install the latest published release with one command:
 
 ```bash
-curl -fsSLo install-cooder.sh \
-  https://raw.githubusercontent.com/DevtApps/cooder/main/scripts/local/install-remote.sh
-less install-cooder.sh
-bash install-cooder.sh
+curl -fsSL https://raw.githubusercontent.com/DevtApps/cooder/main/scripts/local/install-remote.sh | bash
 ```
 
 The installer downloads the latest GitHub Release bundle and verifies its
 SHA-256 checksum before installing. To pin a version, set `COODER_VERSION`,
-for example `COODER_VERSION=v1.0.0 bash install-cooder.sh`.
+for example:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DevtApps/cooder/main/scripts/local/install-remote.sh \
+  | COODER_VERSION=v0.0.1 bash
+```
+
 After installation, `cooder install` downloads and installs the latest
 release, while preserving the existing database and provider data.
 
