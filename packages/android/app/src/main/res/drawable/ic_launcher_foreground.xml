@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Cooder mark: a compact, warm code chevron kept inside the adaptive safe zone. -->
+    <path
+        android:fillColor="#FAF9F5"
+        android:fillType="evenOdd"
+        android:pathData="M48,36 L30,54 L48,72 L54,66 L42,54 L54,42 Z M60,42 L72,54 L60,66 L66,72 L84,54 L66,36 Z" />
+</vector>

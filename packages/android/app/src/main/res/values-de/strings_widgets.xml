@@ -11,7 +11,7 @@
     <string name="native_all_clear">alles erledigt</string>
     <string name="native_all_providers">Alle Anbieter</string>
     <string name="native_answer">Antwort</string>
-    <string name="native_app">Plum Code</string>
+    <string name="native_app">Cooder</string>
     <string name="native_appearance">Darstellung</string>
     <string name="native_approvals">Freigaben</string>
     <string name="native_approve">Erlauben</string>
@@ -81,14 +81,14 @@
     <string name="native_session_error">In der Sitzung ist ein Fehler aufgetreten</string>
     <string name="native_session_failed">Die Sitzung wurde mit einem Fehler beendet.</string>
     <string name="native_sessions">Sitzungen und Agenten</string>
-    <string name="native_signin">Öffne Plum Code und melde dich an</string>
+    <string name="native_signin">Öffne Cooder und melde dich an</string>
     <string name="native_suffix_today"> · heute</string>
     <string name="native_suffix_week"> · 7 Tage</string>
     <string name="native_this_week">diese Woche</string>
-    <string name="native_tile_active">%1$d aktive Plum-Code-Sitzungen</string>
+    <string name="native_tile_active">%1$d aktive Cooder-Sitzungen</string>
     <string name="native_tile_no_sessions">Keine Sitzungen</string>
     <string name="native_tile_running">%1$d aktiv</string>
-    <string name="native_tile_start">Plum Code — tippen, um eine Sitzung zu starten</string>
+    <string name="native_tile_start">Cooder — tippen, um eine Sitzung zu starten</string>
     <string name="native_today">heute</string>
     <string name="native_today_title">Heute</string>
     <string name="native_token_count">%1$s Tokens</string>

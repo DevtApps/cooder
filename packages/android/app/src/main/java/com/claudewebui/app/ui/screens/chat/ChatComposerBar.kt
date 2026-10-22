@@ -173,14 +173,6 @@ internal fun ChatComposerBar(
                 TextButton(onClick = onShowOutbox, modifier = actionModifier, contentPadding = actionPadding) {
                     Text(stringResource(R.string.chat_outbox_count, outboxPendingCount), color = PlumMuted)
                 }
-                if (composer.isWorking) {
-                    TextButton(onClick = actions.onInterrupt, modifier = actionModifier, contentPadding = actionPadding) {
-                        Text(stringResource(R.string.chat_interrupt), color = MaterialTheme.colorScheme.error)
-                    }
-                }
-                TextButton(onClick = actions.onRestart, modifier = actionModifier, contentPadding = actionPadding) {
-                    Text(stringResource(R.string.chat_restart_session), color = PlumMuted)
-                }
             }
 
             // Thinking/tool indicator sits just above input

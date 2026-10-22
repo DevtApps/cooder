@@ -47,17 +47,14 @@ fun ThinkingBlock(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(componentTokens.radius.sm))
-            .background(
-                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f),
-            ),
+            .clip(RoundedCornerShape(componentTokens.radius.sm)),
     ) {
         // ── Collapsed header ──────────────────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { expanded = !expanded }
-                .padding(horizontal = componentTokens.spacing.md, vertical = 9.dp),
+                .padding(horizontal = componentTokens.spacing.xs, vertical = componentTokens.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(componentTokens.spacing.sm),
         ) {

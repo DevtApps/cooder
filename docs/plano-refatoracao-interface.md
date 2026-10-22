@@ -44,8 +44,10 @@
 > funcio­nando com o `MonitorSlotsStore` movido para `widget/`), e o
 > Dashboard ganhou chips de projeto (filtro por `workingDirectory`, como os
 > Projetos do shell novo); o chip selecionado usa agora `selectionTint` da
-> paleta. Falta no Android: o visual do chat estilo Claude (texto serif do
-> assistente, tools em linha recolhível).
+> paleta. A etapa visual do chat começou no Android (22/10/2026): respostas do
+> assistente agora são texto serifado sem cartão glass, e tools/raciocínio usam
+> linhas discretas expansíveis; o compositor concentra Parar no botão de envio.
+> Ainda falta a revisão visual do cabeçalho, compositor e aprovação em aparelho.
 
 Este documento lista o que precisa ser alterado, melhorado e corrigido no
 frontend, inclui a remoção completa do Radix UI e a limpeza das telas, e

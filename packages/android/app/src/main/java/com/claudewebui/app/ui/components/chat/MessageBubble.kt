@@ -57,9 +57,9 @@ import com.claudewebui.app.ui.components.common.PlumBorder
 import com.claudewebui.app.ui.components.common.PlumGreen
 import com.claudewebui.app.ui.components.common.PlumMuted
 import com.claudewebui.app.ui.components.common.PlumText
-import com.claudewebui.app.ui.components.common.glassSurface
 import com.claudewebui.app.ui.theme.JetBrainsMonoFamily
 import com.claudewebui.app.ui.theme.LocalPlumPalette
+import com.claudewebui.app.ui.theme.SerifTypography
 
 // ── Message Group Metadata ────────────────────────────────────────────────────
 
@@ -288,18 +288,10 @@ private fun AssistantBubble(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier.weight(1f),
         ) {
-            // Bubble — frosted glass over the backdrop.
+            // Assistant responses are editorial text, not a second card.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glassSurface(
-                        RoundedCornerShape(
-                            topStart = if (groupInfo.isFirst) componentTokens.spacing.xs else componentTokens.spacing.lg,
-                            topEnd = componentTokens.spacing.lg,
-                            bottomEnd = componentTokens.spacing.lg,
-                            bottomStart = if (groupInfo.isLast) componentTokens.spacing.lg else componentTokens.spacing.xs,
-                        ),
-                    )
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onTap = { onTap() },
@@ -308,7 +300,7 @@ private fun AssistantBubble(
                     },
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = componentTokens.spacing.cozy, vertical = componentTokens.spacing.md),
+                    modifier = Modifier.padding(vertical = componentTokens.spacing.xs),
                     verticalArrangement = Arrangement.spacedBy(componentTokens.spacing.sm),
                 ) {
                     MessageMediaImages(message, onImageClick)
@@ -317,6 +309,7 @@ private fun AssistantBubble(
                         MarkdownContent(
                             text = message.content,
                             isStreaming = isStreaming,
+                            assistant = true,
                         )
                     }
 
@@ -700,9 +693,11 @@ fun MarkdownContent(
     text: String,
     modifier: Modifier = Modifier,
     isStreaming: Boolean = false,
+    assistant: Boolean = false,
 ) {
     val componentTokens = PlumTheme.tokens
     val parsed = remember(text) { parseMarkdown(text) }
+    val bodyStyle = if (assistant) SerifTypography.bodyLarge else MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp)
 
     Column(
         modifier = modifier,
@@ -713,7 +708,7 @@ fun MarkdownContent(
                 is MarkdownBlock.Paragraph -> {
                     LinkedText(
                         text = block.annotated,
-                        style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                        style = bodyStyle,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
@@ -721,7 +716,7 @@ fun MarkdownContent(
                     LinkedText(
                         text = block.annotated,
                         style = when (block.level) {
-                            1 -> MaterialTheme.typography.titleLarge
+                            1 -> if (assistant) SerifTypography.headlineLarge.copy(fontSize = 24.sp, lineHeight = 30.sp) else MaterialTheme.typography.titleLarge
                             2 -> MaterialTheme.typography.titleMedium
                             else -> MaterialTheme.typography.titleSmall
                         },
@@ -753,7 +748,7 @@ fun MarkdownContent(
                         )
                         LinkedText(
                             text = block.annotated,
-                            style = MaterialTheme.typography.bodyMedium.copy(
+                            style = bodyStyle.copy(
                                 fontStyle = FontStyle.Italic,
                             ),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -767,13 +762,13 @@ fun MarkdownContent(
                     ) {
                         Text(
                             text = if (block.ordered) "${block.number}." else "•",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = bodyStyle,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.width(componentTokens.spacing.section),
                         )
                         LinkedText(
                             text = block.annotated,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = bodyStyle,
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f),
                         )

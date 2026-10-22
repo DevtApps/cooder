@@ -205,7 +205,7 @@ private fun BrandHeader(
             // The adaptive launcher resource resolves to an XML adaptive-icon on
             // Android 8+, which painterResource cannot decode.  The foreground is
             // a regular density-aware PNG and is safe to render inside Compose.
-            painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+            painter = painterResource(id = R.drawable.ic_launcher_foreground),
             contentDescription = null,
             modifier = Modifier.size(84.dp),
         )

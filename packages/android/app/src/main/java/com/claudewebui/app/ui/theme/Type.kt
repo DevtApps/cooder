@@ -167,7 +167,7 @@ val CodeTypography = object {
 
 // ── Serif Typography (for editorial / marketing content) ─────────────────────
 
-val SerifTypography = object {
+object SerifTypography {
     val headlineLarge = TextStyle(
         fontFamily = NewsreaderFamily,
         fontWeight = FontWeight.SemiBold,

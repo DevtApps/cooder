@@ -58,20 +58,17 @@ fun ToolExecutionCard(
             .fillMaxWidth()
             .animateContentSize(animationSpec = componentTokens.motion.tweenMedium()),
         shape = RoundedCornerShape(componentTokens.radius.sm),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = Color.Transparent,
         tonalElevation = 0.dp,
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.dp,
-            color = statusColor.copy(alpha = 0.3f),
-        ),
+        border = null,
     ) {
         Column {
             // Header row — always visible
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded }
-                    .padding(horizontal = componentTokens.spacing.md, vertical = componentTokens.spacing.compact),
+                        .fillMaxWidth()
+                        .clickable { expanded = !expanded }
+                    .padding(horizontal = componentTokens.spacing.xs, vertical = componentTokens.spacing.xs),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(componentTokens.spacing.sm),
             ) {
@@ -130,7 +127,7 @@ fun ToolExecutionCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            color = Color.Transparent,
                             shape = RoundedCornerShape(bottomStart = componentTokens.spacing.sm, bottomEnd = componentTokens.spacing.sm),
                         )
                 ) {

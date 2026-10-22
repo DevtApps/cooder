@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Plum Code</string>
+    <string name="app_name">Cooder</string>
     <string name="widget_label">Sitzungen und Agenten</string>
     <string name="widget_description">Aktive Sitzungen, arbeitende Agenten und ausstehende Freigaben auf einen Blick.</string>
     <string name="widget_label_approvals">Freigaben</string>
@@ -24,7 +24,7 @@
     <string name="widget_label_monitor">Monitor</string>
     <string name="widget_desc_monitor">Die vier Sitzungen aus dem Monitor-Tab mit ihrem aktuellen Stand.</string>
     <string name="widget_chart_description">Diagramm des täglichen Tokenverbrauchs</string>
-    <string name="tile_label">Plum Code</string>
+    <string name="tile_label">Cooder</string>
     <string name="component_reasoning_ultrathink">Ultrathink</string>
     <string name="component_reasoning_ultracode">Ultracode (Workflows)</string>
 </resources>

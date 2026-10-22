@@ -11,7 +11,7 @@
     <string name="native_all_clear">all clear</string>
     <string name="native_all_providers">All providers</string>
     <string name="native_answer">Answer</string>
-    <string name="native_app">Plum Code</string>
+    <string name="native_app">Cooder</string>
     <string name="native_appearance">Appearance</string>
     <string name="native_approvals">Approvals</string>
     <string name="native_approve">Approve</string>
@@ -81,14 +81,14 @@
     <string name="native_session_error">Session encountered an error</string>
     <string name="native_session_failed">The session ended with an error.</string>
     <string name="native_sessions">Sessions &amp; Agents</string>
-    <string name="native_signin">Open Plum Code and sign in</string>
+    <string name="native_signin">Open Cooder and sign in</string>
     <string name="native_suffix_today"> · today</string>
     <string name="native_suffix_week"> · 7d</string>
     <string name="native_this_week">this week</string>
-    <string name="native_tile_active">%1$d active Plum Code sessions</string>
+    <string name="native_tile_active">%1$d active Cooder sessions</string>
     <string name="native_tile_no_sessions">No sessions</string>
     <string name="native_tile_running">%1$d running</string>
-    <string name="native_tile_start">Plum Code — tap to start a session</string>
+    <string name="native_tile_start">Cooder — tap to start a session</string>
     <string name="native_today">today</string>
     <string name="native_today_title">Today</string>
     <string name="native_token_count">%1$s tokens</string>
