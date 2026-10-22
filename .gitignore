@@ -10,7 +10,7 @@ out/
 
 .screenshots
 
-workspace
+/workspace/
 # Database
 *.db
 *.sqlite
